@@ -6,7 +6,15 @@ Small academies usually track fees on paper or in Excel and chase parents by han
 
 > **Status:** working portfolio project. WhatsApp runs in Meta's test mode and payments are recorded manually. See [Limitations](#limitations).
 
-<!-- Add screenshots here: dashboard, monthly report, and a WhatsApp reminder (blur phone numbers) -->
+## Screenshots
+
+**Owner dashboard**
+
+![Dashboard](screenshots/dashboard.png)
+
+**WhatsApp: a grouped receipt and a reminder with an overdue month**
+
+<img src="screenshots/whatsapp.png" width="300" alt="WhatsApp receipt and reminder">
 
 ---
 
