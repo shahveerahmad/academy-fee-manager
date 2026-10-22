@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Academy Fees</title>
+  <style>
+    body { font-family: sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+    input, button { padding: 6px 10px; margin: 4px 4px 4px 0; }
+    button { cursor: pointer; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border-bottom: 1px solid #ddd; padding: 8px; text-align: left; }
+    .paid { color: green; }
+    .unpaid { color: crimson; }
+  </style>
+</head>
+<body>
+  <h1>Academy Fees</h1>
+
+  <button onclick="logout()">Log out</button>
+
+  <h2>Add student</h2>
+  <input id="name" placeholder="Name">
+  <input id="class_name" placeholder="Class">
+  <input id="parent_phone" placeholder="Parent phone">
+  <input id="monthly_fee" type="number" placeholder="Monthly fee">
+  <button onclick="addStudent()">Add</button>
+
+
+  <input id="month" type="month">
+
+    <h2>Monthly report</h2>
+  <button onclick="loadReport()">Show report</button>
+
+  <table id="report" style="display:none; width:auto;">
+    <tr><td>Billed</td><td id="r-billed"></td></tr>
+    <tr><td>Collected</td><td id="r-collected"></td></tr>
+    <tr><td>Pending (this month)</td><td id="r-pending"></td></tr>
+    <tr><td>Overdue from earlier months</td><td id="r-overdue"></td></tr>
+    <tr><td><b>Total outstanding</b></td><td id="r-total"></td></tr>
+    <tr><td>Students paid / unpaid</td><td id="r-counts"></td></tr>
+  </table>
+
+  <h3>Per student</h3>
+  <table id="student-report">
+    <thead>
+      <tr>
+        <th>Student</th><th>Class</th><th>This month</th><th>Status</th>
+        <th>Paid on</th><th>Overdue before</th><th>Total due</th>
+      </tr>
+    </thead>
+    <tbody id="student-report-body"></tbody>
+  </table>
+
+  <h2>Monthly fees</h2>
+  
+  <button onclick="generateFees()">Generate fees</button>
+  <button onclick="loadFees()">Show fees</button>
+  <p id="message"></p>
+
+  <table>
+    <thead>
+      <tr><th>Student</th><th>Phone</th><th>Amount</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody id="fees"></tbody>
+  </table>
+
+  <script>
+    async function api(url, options) {
+  const response = await fetch(url, options);
+  if (response.status === 401) {
+    window.location = "/login";
+    throw new Error("Not logged in");
+  }
+  return response;
+}
+
+async function logout() {
+  await fetch("/logout", { method: "POST" });
+  window.location = "/login";
+}
+
+
+    const $ = (id) => document.getElementById(id);
+
+    // Set the month picker to the current month
+    $("month").value = new Date().toISOString().slice(0, 7);
+
+    async function addStudent() {
+      const response = await api("/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: $("name").value,
+          class_name: $("class_name").value,
+          parent_phone: $("parent_phone").value,
+          monthly_fee: Number($("monthly_fee").value),
+        }),
+      });
+      if (response.ok) {
+        $("message").textContent = "Student added.";
+        ["name", "class_name", "parent_phone", "monthly_fee"].forEach((id) => ($(id).value = ""));
+      } else {
+        $("message").textContent = "Could not add student. Check all fields.";
+      }
+    }
+
+    async function generateFees() {
+      const month = $("month").value;
+      const response = await api(`/fees/generate/${month}`, { method: "POST" });
+      const data = await response.json();
+      $("message").textContent = `${data.created} new fee record(s) created for ${month}.`;
+      loadFees();
+    }
+
+    async function loadFees() {
+      const month = $("month").value;
+      const response = await api(`/fees?month=${month}`);
+      const fees = await response.json();
+
+      const body = $("fees");
+      body.innerHTML = "";
+      for (const fee of fees) {
+        const row = document.createElement("tr");
+        const cells = [fee.student_name, fee.parent_phone, fee.amount_due];
+        for (const value of cells) {
+          const cell = document.createElement("td");
+          cell.textContent = value;
+          row.appendChild(cell);
+        }
+
+        const statusCell = document.createElement("td");
+        statusCell.textContent = fee.status;
+        statusCell.className = fee.status;
+        row.appendChild(statusCell);
+
+        const actionCell = document.createElement("td");
+        if (fee.status === "unpaid") {
+          const button = document.createElement("button");
+          button.textContent = "Mark paid";
+          button.onclick = () => markPaid(fee.fee_id);
+          actionCell.appendChild(button);
+        }
+        row.appendChild(actionCell);
+        body.appendChild(row);
+      }
+    }
+
+    async function markPaid(feeId) {
+    const response = await api(`/fees/${feeId}/pay`, { method: "POST" });
+    if (!response.ok) {
+        const error = await response.json();
+        $("message").textContent = `Error ${response.status}: ${JSON.stringify(error.detail)}`;
+        return;
+    }
+    $("message").textContent = "Marked as paid.";
+    loadFees();
+    }
+
+
+    async function loadReport() {
+    const month = $("month").value;
+    const response = await api(`/report?month=${month}`);
+    const report = await response.json();
+
+    $("r-billed").textContent = `Rs. ${report.billed}`;
+    $("r-collected").textContent = `Rs. ${report.collected}`;
+    $("r-pending").textContent = `Rs. ${report.pending}`;
+    $("r-overdue").textContent = `Rs. ${report.overdue_before}`;
+    $("r-total").textContent = `Rs. ${report.total_outstanding}`;
+    $("r-counts").textContent = `${report.paid_count} paid / ${report.unpaid_count} unpaid`;
+    $("report").style.display = "table";
+    loadStudentReport();
+    }
+
+
+    async function loadStudentReport() {
+        const month = $("month").value;
+        const response = await api(`/report/students?month=${month}`);
+        const rows = await response.json();
+
+        const body = $("student-report-body");
+        body.innerHTML = "";
+
+        for (const row of rows) {
+            const tr = document.createElement("tr");
+            const values = [
+            row.student_name,
+            row.class_name,
+            row.month_fee,
+            row.status,
+            row.paid_on ?? "-",
+            row.overdue_before,
+            row.total_due,
+            ];
+            for (const value of values) {
+            const td = document.createElement("td");
+            td.textContent = value;
+            tr.appendChild(td);
+            }
+
+            // colour the status cell like the fees table does
+            tr.children[3].className = row.status;
+            // make a non-zero total stand out
+            if (row.total_due > 0) tr.children[6].style.fontWeight = "bold";
+
+            body.appendChild(tr);
+        }
+        }
+  </script>
+</body>
+</html>

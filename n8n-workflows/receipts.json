@@ -1,0 +1,112 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "fee-paid",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7da15c12-5d00-410f-8abb-cc3babcb05c9",
+      "name": "Webhook",
+      "webhookId": "90be2876-abdf-4e1a-a28d-47afaa8baf10"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "181eacbb-d622-47e1-ae8d-56b937b7bd89",
+              "name": "phone",
+              "value": "={{ '92' + String($json.body.parent_phone).replace(/\\D/g, '').replace(/^0/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "dc84a525-02b1-4233-ae0d-8824f15ae3b0",
+              "name": "message",
+              "value": "=Assalam o Alaikum. Receipt: {{ $json.body.children.map(c => c.student_name + ' (' + c.month + ') - Rs. ' + c.amount).join(', ') }}. Total received: Rs. {{ $json.body.total }} on {{ $json.body.paid_on }}. Thank you.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "a0fec2ee-dc8c-41cb-a7b6-8e644530e8f1",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1323328197538290",
+        "recipientPhoneNumber": "={{ $json.phone }}",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "77a4604b-583d-4ea8-ad31-3c83dfaad5db",
+      "name": "Send message",
+      "webhookId": "9c801b5f-2c11-451f-8e4a-0bc21f85344c",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "XlOugK3RR4RqhSbV",
+          "name": "WhatsApp account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "cea97515-959c-4d8f-b260-a627b3a6baff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "807fc73868b40c4a04f141ed1ff594c0dba11fd4a8f46f69deea3113a3ff60a8"
+  },
+  "nodeGroups": [],
+  "id": "8M9qvcJ0o5mMFsTP",
+  "tags": []
+}

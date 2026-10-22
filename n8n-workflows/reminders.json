@@ -1,0 +1,187 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "dca7bcc7-70e1-4b00-a4d2-06988dda498c",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "=http://127.0.0.1:8000/families/unpaid?month={{ $now.toFormat('yyyy-MM') }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "cdfd7c51-844f-4d05-b030-e9eba3f541c3",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MYuIyV6P6CfslYti",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0cf748d1-bc8b-44ea-b33d-48049ae92bf7",
+              "name": "message",
+              "value": "=Assalam o Alaikum. Fee reminder: {{ $json.children.map(c => c.student_name + ' - ' + new Date(c.month + '-01').toLocaleString('en-US', { month: 'long', year: 'numeric' }) + ' - Rs. ' + c.amount_due).join(', ') }}. Total due: Rs. {{ $json.total }}. Please pay at your earliest convenience. Thank you.",
+              "type": "string"
+            },
+            {
+              "id": "4db7b25a-7d1d-41b1-9599-c49db700f6ce",
+              "name": "phone",
+              "value": "={{ '92' + String($json.parent_phone).replace(/\\D/g, '').replace(/^0/, '') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "b5392a3d-622a-4e59-8b4f-22d398f1862c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtHour": 10
+            },
+            {
+              "field": "months",
+              "triggerAtDayOfMonth": 10,
+              "triggerAtHour": 10
+            },
+            {
+              "field": "months",
+              "triggerAtDayOfMonth": 20,
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        -144
+      ],
+      "id": "b73cf2b9-657c-493f-af81-3367aebaa3ad",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1323328197538290",
+        "recipientPhoneNumber": "={{ $json.phone }}",
+        "textBody": "={{ $json.message }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "134c024d-4a75-4842-8d5b-2012aab6a4c0",
+      "name": "Send message",
+      "webhookId": "dfa5d56d-ab95-47d5-bb0b-ddb96e71d4f3",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "RVJh7yknELrWcts3",
+          "name": "WhatsApp account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Karachi",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "741cd577-dddc-4db1-8da5-871a80aab36a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "807fc73868b40c4a04f141ed1ff594c0dba11fd4a8f46f69deea3113a3ff60a8"
+  },
+  "nodeGroups": [],
+  "id": "id2xsL0IiM718H22",
+  "tags": []
+}

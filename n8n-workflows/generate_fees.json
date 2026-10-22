@@ -1,0 +1,70 @@
+{
+  "name": "Generate monthly fees",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6ccf09c1-0a75-41f6-8215-ccbfa378c907",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://127.0.0.1:8000/fees/generate/{{ $now.toFormat('yyyy-MM') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "25e4c532-d4fa-4e98-a828-7ee81aa5101e",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Karachi",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "eb5f6729-ec5d-45a4-a5f7-3cc857558814",
+  "meta": {
+    "instanceId": "807fc73868b40c4a04f141ed1ff594c0dba11fd4a8f46f69deea3113a3ff60a8"
+  },
+  "nodeGroups": [],
+  "id": "ZmQ8T5cmP5qsFrz0",
+  "tags": []
+}

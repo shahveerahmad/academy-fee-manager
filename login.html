@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login</title>
+  <style>
+    body { font-family: sans-serif; max-width: 320px; margin: 4rem auto; padding: 0 1rem; }
+    input, button { width: 100%; padding: 8px; margin: 6px 0; box-sizing: border-box; }
+    #error { color: crimson; }
+  </style>
+</head>
+<body>
+  <h1>Academy Fees</h1>
+  <input id="password" type="password" placeholder="Password" autofocus>
+  <button onclick="login()">Log in</button>
+  <p id="error"></p>
+
+  <script>
+    document.getElementById("password").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") login();
+    });
+
+    async function login() {
+      const response = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: document.getElementById("password").value }),
+      });
+      if (response.ok) window.location = "/dashboard";
+      else document.getElementById("error").textContent = "Wrong password.";
+    }
+  </script>
+</body>
+</html>
